@@ -4,15 +4,14 @@ import sqlite3
 import argparse
 import time
 import os
-import socket
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--create', action='store_true',
-                    help='Create database file and initialize')
-parser.add_argument('--file', dest='file', type=str,
-                    help='Location of the database file')
-parser.add_argument('--load', dest='load', type=str,
-                    help='Load accounts from file')
+                    help='Create database file and initialize.')
+parser.add_argument('--file', dest='file', required=True,
+                    help='Location of the database file.')
+parser.add_argument('--load', dest='load',
+                    help='Load accounts from file as date Epoch 0')
 args = parser.parse_args()
 
 
@@ -21,7 +20,7 @@ def create_db(db):
         con = sqlite3.connect(db)
         cursor = con.cursor()
         cursor.execute(
-            "CREATE TABLE lastlog(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, date INTEGER)")
+            "CREATE TABLE IF NOT EXISTS lastlog(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, date INTEGER)")
         cursor.close()
         con.close()
         print("Database initialized")
@@ -31,6 +30,9 @@ def create_db(db):
 
 def update_db(db):
     try:
+        if not os.path.exists(db):
+            print(f"file not found: {db}")
+            exit(2)
         conn = sqlite3.connect(db)
         cursor = conn.cursor()
         current_time = int(time.time())
@@ -41,12 +43,11 @@ def update_db(db):
         existing_user = cursor.fetchone()
         if existing_user:
             cursor.execute(
-                "UPDATE lastlog SET date=? WHERE user=?", (current_time,user,))
+                "UPDATE lastlog SET date=? WHERE user=?", (current_time, user,))
         else:
             cursor.execute(
-                "INSERT INTO lastlog (user, date) VALUES (?, ?)", (user,current_time,))
+                "INSERT INTO lastlog (user, date) VALUES (?, ?)", (user, current_time,))
         conn.commit()
-        # print(f"User '{params[0]}' {'updated' if existing_user else 'inserted'} successfully.")
         cursor.close()
         conn.close()
     except sqlite3.Error as e:
@@ -55,18 +56,21 @@ def update_db(db):
 
 def load_db(db, users_file):
     try:
+        if not os.path.exists(db) or not os.path.exists(users_file):
+            print(f"file not found: {db} or {users_file}")
+            exit(2)
         conn = sqlite3.connect(db)
         cursor = conn.cursor()
         import csv
         with open(users_file) as csvfile:
             list = csv.reader(csvfile, delimiter=':')
             for row in list:
-                print(row[0])
-                # data = (
-                #     row[0],
-                #     '0',
-                # )
-                # cursor.execute( "INSERT INTO lastlog (user, date) VALUES (?, ?)", data )
+                data = (
+                    row[0],
+                    '0',
+                )
+                cursor.execute(
+                    "INSERT INTO lastlog (user, date) VALUES (?, ?)", data)
         conn.commit()
         cursor.close()
         conn.close()
