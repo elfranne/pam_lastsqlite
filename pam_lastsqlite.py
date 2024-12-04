@@ -17,12 +17,12 @@ args = parser.parse_args()
 
 def create_db(db):
     try:
-        con = sqlite3.connect(db)
-        cursor = con.cursor()
+        conn = sqlite3.connect(db)
+        cursor = conn.cursor()
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS lastlog(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user TEXT, date INTEGER)")
         cursor.close()
-        con.close()
+        conn.close()
         print("Database initialized")
     except sqlite3.Error as e:
         print(f"create_db: {e}")
