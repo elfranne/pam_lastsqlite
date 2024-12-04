@@ -64,7 +64,7 @@ def load_db(db, users_file):
                 print(row[0])
                 # data = (
                 #     row[0],
-                #     int(time.time()),
+                #     '0',
                 # )
                 # cursor.execute( "INSERT INTO lastlog (user, date) VALUES (?, ?)", data )
         conn.commit()
