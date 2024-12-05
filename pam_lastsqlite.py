@@ -62,8 +62,9 @@ def load_db(db, users_file):
         conn = sqlite3.connect(db)
         cursor = conn.cursor()
         import csv
-        with open(users_file) as csvfile:
-            list = csv.reader(csvfile, delimiter=':')
+        with open(users_file, 'r') as csvfile:
+            list = csv.reader(filter(lambda row: row[0] != '#', csvfile), delimiter=':')
+            next(list, None)
             for row in list:
                 data = (
                     row[0],
